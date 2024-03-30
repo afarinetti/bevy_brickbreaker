@@ -45,8 +45,13 @@ impl Action {
         let mut input_map = InputMap::default();
 
         input_map.insert_one_to_many(Self::Left, [KeyCode::ArrowLeft, KeyCode::KeyA]);
+        input_map.insert(Self::Left, GamepadButtonType::DPadLeft);
+        
         input_map.insert_one_to_many(Self::Right, [KeyCode::ArrowRight, KeyCode::KeyD]);
+        input_map.insert(Self::Right, GamepadButtonType::DPadRight);
+        
         input_map.insert(Self::Fire, KeyCode::Space);
+        input_map.insert(Self::Fire, GamepadButtonType::South);
 
         input_map
     }
