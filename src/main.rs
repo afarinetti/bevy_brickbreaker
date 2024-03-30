@@ -2,8 +2,8 @@ use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
-use leafwing_input_manager::prelude::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
+use leafwing_input_manager::prelude::*;
 
 fn main() {
     App::new()
@@ -113,9 +113,7 @@ fn setup(
         .insert(Restitution::coefficient(1.1))
         .insert(ColliderMassProperties::Mass(0.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
-        .insert(InputManagerBundle::with_map(
-            Action::default_input_map(),
-        ))
+        .insert(InputManagerBundle::with_map(Action::default_input_map()))
         .insert(Player);
 }
 
@@ -130,7 +128,7 @@ fn spawn_ball(mut commands: Commands) {
         .insert(Dominance::group(0)) // default=0, but listed to be explicit
         .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(1.00))
-        .insert(ColliderMassProperties::Mass(1000.0))        
+        .insert(ColliderMassProperties::Mass(1000.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
         .insert(ExternalForce {
             torque: 1.0,
