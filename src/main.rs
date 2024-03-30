@@ -4,21 +4,24 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use leafwing_input_manager::prelude::*;
+use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
 fn main() {
     App::new()
         // plugins
-        .add_plugins(DefaultPlugins)
-        // .add_plugins(DefaultPlugins.set(WindowPlugin {
-        //     primary_window: Some(Window {
-        //         present_mode: PresentMode::AutoVsync,
-        //         ..default()
-        //     }),
-        //     ..default()
-        // }))
+        // .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                present_mode: bevy::window::PresentMode::AutoNoVsync,
+                ..default()
+            }),
+            ..default()
+        }))
         .add_plugins(
             WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::F1)),
         )
+        .add_plugins(ScreenDiagnosticsPlugin::default())
+        .add_plugins(ScreenFrameDiagnosticsPlugin)
         .add_plugins(InputManagerPlugin::<Action>::default())
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(50.0))
         .add_plugins(RapierDebugRenderPlugin::default())
@@ -26,6 +29,7 @@ fn main() {
         .add_systems(Startup, setup)
         .add_systems(Startup, spawn_ball.after(setup))
         .add_systems(Update, use_actions)
+        .add_systems(Update, collision_handler)
         // resources
         // start
         .run();
@@ -46,10 +50,10 @@ impl Action {
 
         input_map.insert_one_to_many(Self::Left, [KeyCode::ArrowLeft, KeyCode::KeyA]);
         input_map.insert(Self::Left, GamepadButtonType::DPadLeft);
-        
+
         input_map.insert_one_to_many(Self::Right, [KeyCode::ArrowRight, KeyCode::KeyD]);
         input_map.insert(Self::Right, GamepadButtonType::DPadRight);
-        
+
         input_map.insert(Self::Fire, KeyCode::Space);
         input_map.insert(Self::Fire, GamepadButtonType::South);
 
@@ -59,6 +63,12 @@ impl Action {
 
 #[derive(Component)]
 struct Player;
+
+#[derive(Component)]
+struct Ball;
+
+#[derive(Component)]
+struct Brick;
 
 fn setup(
     mut commands: Commands,
@@ -127,6 +137,7 @@ fn spawn_ball(mut commands: Commands) {
     commands
         .spawn(RigidBody::Dynamic)
         .insert(Name::new("Ball"))
+        .insert(Ball)
         .insert(Collider::ball(10.0))
         .insert(GravityScale(2.0))
         .insert(Ccd::enabled()) // TODO: is this needed?
@@ -135,6 +146,7 @@ fn spawn_ball(mut commands: Commands) {
         .insert(Restitution::coefficient(1.00))
         .insert(ColliderMassProperties::Mass(1000.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
+        .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(ExternalForce {
             torque: 1.0,
             ..default()
@@ -150,17 +162,38 @@ fn use_actions(
 
     if action_state.pressed(&Action::Left) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(-7.0, 0.0));
+            controller.translation = Some(Vec2::new(-1.0, 0.0));
         }
     }
 
     if action_state.pressed(&Action::Right) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(7.0, 0.0));
+            controller.translation = Some(Vec2::new(1.0, 0.0));
         }
     }
 
     if action_state.just_pressed(&Action::Fire) {
         spawn_ball(commands);
+    }
+}
+
+fn collision_handler(
+    mut collision_events: EventReader<CollisionEvent>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    // ball_query: Query<&Ball>,
+) {
+    for collision_event in collision_events.read() {
+        // TODO: this matches ANY collision, but should filter on entity type Ball
+        match collision_event {
+            CollisionEvent::Stopped(e_collider, e_self, _flags) => {
+                println!("CollisionEvent::Stopped(self={:?}, collider={:?})", e_self, e_collider);
+                commands.spawn(AudioBundle {
+                    source: asset_server.load("sounds/SFX_-_jump_03.ogg"),
+                    ..default()
+                });
+            }
+            _ => ()
+        }
     }
 }
