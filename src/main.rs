@@ -228,14 +228,11 @@ fn handler_collisions(
 ) {
     for collision_event in collision_events.read() {
         // TODO: this matches ANY collision, but should filter on entity type Ball
-        match collision_event {
-            CollisionEvent::Stopped(_e_collider, _e_self, _flags) => {
-                commands.spawn(AudioBundle {
-                    source: asset_server.load("sounds/SFX_-_jump_03.ogg"),
-                    ..default()
-                });
-            }
-            _ => (),
+        if let CollisionEvent::Stopped(_e_collider, _e_self, _flags) = collision_event {
+            commands.spawn(AudioBundle {
+                source: asset_server.load("sounds/SFX_-_jump_03.ogg"),
+                ..default()
+            });
         }
     }
 }
