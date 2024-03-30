@@ -14,6 +14,8 @@ const HALF_HEIGHT: f32 = WINDOW_HEIGHT / 2.0;
 const HALF_WIDTH: f32 = WINDOW_WIDTH / 2.0;
 
 const PADDLE_SPEED: f32 = 600.0;
+const PADDLE_POSITION: Vec3 = Vec3::new(0.0, -HALF_HEIGHT * 0.86, 0.0);
+const PADDLE_HEIGHT: f32 = 10.0;
 
 fn main() {
     App::new()
@@ -44,8 +46,8 @@ fn main() {
         // systems
         .add_systems(Startup, setup)
         .add_systems(Startup, spawn_ball.after(setup))
-        .add_systems(Update, use_actions)
-        .add_systems(Update, collision_handler)
+        .add_systems(Update, handler_actions)
+        .add_systems(Update, handler_collisions)
         // resources
         // start
         .run();
@@ -135,7 +137,7 @@ fn setup(
             apply_impulse_to_dynamic_bodies: true,
             ..default()
         })
-        .insert(Collider::cuboid(HALF_WIDTH / 2.5, 10.0))
+        .insert(Collider::cuboid(HALF_WIDTH / 2.5, PADDLE_HEIGHT))
         .insert(GravityScale(0.0))
         .insert(Dominance::group(5))
         .insert(LockedAxes::ROTATION_LOCKED)
@@ -143,12 +145,18 @@ fn setup(
         .insert(Friction::coefficient(1.0))
         .insert(Restitution::coefficient(1.1))
         .insert(ColliderMassProperties::Mass(0.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -HALF_HEIGHT * 0.86, 0.0)))
+        .insert(TransformBundle::from(Transform {
+            translation: PADDLE_POSITION,
+            ..default()
+        }))
         .insert(InputManagerBundle::with_map(Action::default_input_map()))
         .insert(Player);
+
 }
 
 fn spawn_ball(mut commands: Commands) {
+    let ball_position = PADDLE_POSITION + (Vec3::new(0.0, PADDLE_HEIGHT * 2.0, 0.0));
+
     // configure and spawn the ball
     commands
         .spawn(RigidBody::Dynamic)
@@ -160,19 +168,23 @@ fn spawn_ball(mut commands: Commands) {
         .insert(Dominance::group(0)) // default=0, but listed to be explicit
         .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(1.00))
-        .insert(ColliderMassProperties::Mass(1000.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, HALF_HEIGHT * 0.75, 0.0)))
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(ExternalForce {
-            torque: 1.0,
+        .insert(ColliderMassProperties::Mass(1.0))
+        .insert(Sleeping {
+            sleeping: true,
             ..default()
-        });
+        })
+        .insert(TransformBundle::from(Transform {
+            translation: ball_position,
+            ..default()
+        }))
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(ExternalImpulse::default());
 }
 
-fn use_actions(
-    commands: Commands,
+fn handler_actions(
     time: Res<Time>,
     action_query: Query<&ActionState<Action>, With<Player>>,
+    mut ball_query: Query<(&Sleeping, &mut ExternalImpulse), With<Ball>>,
     mut controllers: Query<&mut KinematicCharacterController>,
 ) {
     let action_state = action_query.single();
@@ -190,11 +202,16 @@ fn use_actions(
     }
 
     if action_state.just_pressed(&Action::Fire) {
-        spawn_ball(commands);
+        for query_result in ball_query.iter_mut() {
+            let (sleeping, mut ext_impulse) = query_result;
+            if sleeping.sleeping {
+                ext_impulse.impulse = Vec2::new(0.0, 750.0);
+            }
+        }
     }
 }
 
-fn collision_handler(
+fn handler_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
