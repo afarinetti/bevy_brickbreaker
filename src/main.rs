@@ -1,20 +1,36 @@
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
+use bevy::window::{EnabledButtons, ExitCondition, WindowResolution};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use leafwing_input_manager::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
+const WINDOW_WIDTH: f32 = 512.0;
+const WINDOW_HEIGHT: f32 = 768.0;
+
+const HALF_HEIGHT: f32 = WINDOW_HEIGHT / 2.0;
+const HALF_WIDTH: f32 = WINDOW_WIDTH / 2.0;
+
+const PADDLE_SPEED: f32 = 12.0;
+
 fn main() {
     App::new()
         // plugins
-        // .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                present_mode: bevy::window::PresentMode::AutoNoVsync,
+                resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT),
+                resizable: false,
+                enabled_buttons: EnabledButtons {
+                    maximize: false,
+                    ..default()
+                },
+                name: Some("BevyApp".to_string()),
+                title: "BrickBreaker in Rust+Bevy".to_string(),
                 ..default()
             }),
+            exit_condition: ExitCondition::OnPrimaryClosed,
             ..default()
         }))
         .add_plugins(
@@ -83,27 +99,27 @@ fn setup(
 
     // create the top
     commands
-        .spawn(Collider::cuboid(640.0, 10.0))
+        .spawn(Collider::cuboid(HALF_WIDTH, 1.0))
         .insert(Name::new("Wall_Top"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 350.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, HALF_HEIGHT, 0.0)));
 
     // create the left wall
     commands
-        .spawn(Collider::cuboid(10.0, 500.0))
+        .spawn(Collider::cuboid(1.0, HALF_HEIGHT))
         .insert(Name::new("Wall_Left"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(-630.0, 0.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(-HALF_WIDTH, 0.0, 0.0)));
 
     // create the right wall
     commands
-        .spawn(Collider::cuboid(10.0, 500.0))
+        .spawn(Collider::cuboid(1.0, HALF_HEIGHT))
         .insert(Name::new("Wall_Right"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(630.0, 0.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(HALF_WIDTH, 0.0, 0.0)));
 
     // // create the bottom
     // commands
@@ -119,7 +135,7 @@ fn setup(
             apply_impulse_to_dynamic_bodies: true,
             ..default()
         })
-        .insert(Collider::cuboid(250.0, 10.0))
+        .insert(Collider::cuboid(HALF_WIDTH / 2.5, 10.0))
         .insert(GravityScale(0.0))
         .insert(Dominance::group(5))
         .insert(LockedAxes::ROTATION_LOCKED)
@@ -127,7 +143,7 @@ fn setup(
         .insert(Friction::coefficient(1.0))
         .insert(Restitution::coefficient(1.1))
         .insert(ColliderMassProperties::Mass(0.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, -HALF_HEIGHT * 0.86, 0.0)))
         .insert(InputManagerBundle::with_map(Action::default_input_map()))
         .insert(Player);
 }
@@ -138,14 +154,14 @@ fn spawn_ball(mut commands: Commands) {
         .spawn(RigidBody::Dynamic)
         .insert(Name::new("Ball"))
         .insert(Ball)
-        .insert(Collider::ball(10.0))
+        .insert(Collider::ball(8.0))
         .insert(GravityScale(2.0))
         .insert(Ccd::enabled()) // TODO: is this needed?
         .insert(Dominance::group(0)) // default=0, but listed to be explicit
         .insert(Friction::coefficient(0.7))
         .insert(Restitution::coefficient(1.00))
         .insert(ColliderMassProperties::Mass(1000.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, HALF_HEIGHT * 0.75, 0.0)))
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(ExternalForce {
             torque: 1.0,
@@ -162,13 +178,13 @@ fn use_actions(
 
     if action_state.pressed(&Action::Left) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(-1.0, 0.0));
+            controller.translation = Some(Vec2::new(-PADDLE_SPEED, 0.0));
         }
     }
 
     if action_state.pressed(&Action::Right) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(1.0, 0.0));
+            controller.translation = Some(Vec2::new(PADDLE_SPEED, 0.0));
         }
     }
 
