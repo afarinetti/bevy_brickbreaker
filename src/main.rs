@@ -46,8 +46,8 @@ fn main() {
         // systems
         .add_systems(Startup, setup)
         .add_systems(Startup, spawn_ball.after(setup))
-        .add_systems(Update, handler_actions)
-        .add_systems(Update, handler_collisions)
+        .add_systems(Update, handle_actions)
+        .add_systems(Update, handle_collisions)
         // resources
         // start
         .run();
@@ -190,7 +190,7 @@ fn spawn_ball(mut commands: Commands) {
         .insert(ExternalImpulse::default());
 }
 
-fn handler_actions(
+fn handle_actions(
     time: Res<Time>,
     action_query: Query<&ActionState<Action>, With<Player>>,
     mut ball_query: Query<(&Sleeping, &mut ExternalImpulse), With<Ball>>,
@@ -220,7 +220,7 @@ fn handler_actions(
     }
 }
 
-fn handler_collisions(
+fn handle_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
