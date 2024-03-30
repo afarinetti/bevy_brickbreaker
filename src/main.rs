@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use bevy::window::{EnabledButtons, ExitCondition, WindowResolution};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
+use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use leafwing_input_manager::plugin::InputManagerPlugin;
 use leafwing_input_manager::prelude::*;
-use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
 const WINDOW_WIDTH: f32 = 512.0;
 const WINDOW_HEIGHT: f32 = 768.0;
@@ -105,7 +105,11 @@ fn setup(
         .insert(Name::new("Wall_Top"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, HALF_HEIGHT, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(
+            0.0,
+            HALF_HEIGHT,
+            0.0,
+        )));
 
     // create the left wall
     commands
@@ -113,7 +117,11 @@ fn setup(
         .insert(Name::new("Wall_Left"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(-HALF_WIDTH, 0.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(
+            -HALF_WIDTH,
+            0.0,
+            0.0,
+        )));
 
     // create the right wall
     commands
@@ -121,7 +129,9 @@ fn setup(
         .insert(Name::new("Wall_Right"))
         .insert(Restitution::coefficient(1.0))
         .insert(Friction::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(HALF_WIDTH, 0.0, 0.0)));
+        .insert(TransformBundle::from(Transform::from_xyz(
+            HALF_WIDTH, 0.0, 0.0,
+        )));
 
     // // create the bottom
     // commands
@@ -151,7 +161,6 @@ fn setup(
         }))
         .insert(InputManagerBundle::with_map(Action::default_input_map()))
         .insert(Player);
-
 }
 
 fn spawn_ball(mut commands: Commands) {
@@ -220,14 +229,13 @@ fn handler_collisions(
     for collision_event in collision_events.read() {
         // TODO: this matches ANY collision, but should filter on entity type Ball
         match collision_event {
-            CollisionEvent::Stopped(e_collider, e_self, _flags) => {
-                println!("CollisionEvent::Stopped(self={:?}, collider={:?})", e_self, e_collider);
+            CollisionEvent::Stopped(_e_collider, _e_self, _flags) => {
                 commands.spawn(AudioBundle {
                     source: asset_server.load("sounds/SFX_-_jump_03.ogg"),
                     ..default()
                 });
             }
-            _ => ()
+            _ => (),
         }
     }
 }
