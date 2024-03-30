@@ -1,6 +1,6 @@
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use bevy::window::{EnabledButtons, ExitCondition, PresentMode, WindowResolution};
+use bevy::window::{EnabledButtons, ExitCondition, WindowResolution};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
@@ -13,14 +13,13 @@ const WINDOW_HEIGHT: f32 = 768.0;
 const HALF_HEIGHT: f32 = WINDOW_HEIGHT / 2.0;
 const HALF_WIDTH: f32 = WINDOW_WIDTH / 2.0;
 
-const PADDLE_SPEED: f32 = 12.0;
+const PADDLE_SPEED: f32 = 600.0;
 
 fn main() {
     App::new()
         // plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                present_mode: PresentMode::AutoVsync,
                 resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT),
                 resizable: false,
                 enabled_buttons: EnabledButtons {
@@ -172,6 +171,7 @@ fn spawn_ball(mut commands: Commands) {
 
 fn use_actions(
     commands: Commands,
+    time: Res<Time>,
     action_query: Query<&ActionState<Action>, With<Player>>,
     mut controllers: Query<&mut KinematicCharacterController>,
 ) {
@@ -179,13 +179,13 @@ fn use_actions(
 
     if action_state.pressed(&Action::Left) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(-PADDLE_SPEED, 0.0));
+            controller.translation = Some(Vec2::new(-PADDLE_SPEED * time.delta_seconds(), 0.0));
         }
     }
 
     if action_state.pressed(&Action::Right) {
         for mut controller in controllers.iter_mut() {
-            controller.translation = Some(Vec2::new(PADDLE_SPEED, 0.0));
+            controller.translation = Some(Vec2::new(PADDLE_SPEED * time.delta_seconds(), 0.0));
         }
     }
 
