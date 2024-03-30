@@ -1,6 +1,6 @@
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use bevy::window::{EnabledButtons, ExitCondition, WindowResolution};
+use bevy::window::{EnabledButtons, ExitCondition, PresentMode, WindowResolution};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::plugin::InputManagerPlugin;
@@ -20,6 +20,7 @@ fn main() {
         // plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
+                present_mode: PresentMode::AutoVsync,
                 resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT),
                 resizable: false,
                 enabled_buttons: EnabledButtons {
