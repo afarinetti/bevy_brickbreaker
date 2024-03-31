@@ -240,10 +240,7 @@ fn handle_collisions(
     }
 }
 
-fn dev_tools_system(
-    commands: Commands,
-    mut contexts: EguiContexts,
-) {
+fn dev_tools_system(commands: Commands, mut contexts: EguiContexts) {
     egui::Window::new("Dev Tools").show(contexts.ctx_mut(), |ui| {
         if ui.button("Spawn Ball").clicked() {
             spawn_ball(commands);
