@@ -1,6 +1,8 @@
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy::window::{EnabledButtons, ExitCondition, WindowResolution};
+use bevy_inspector_egui::bevy_egui::EguiContexts;
+use bevy_inspector_egui::egui;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
@@ -48,6 +50,7 @@ fn main() {
         .add_systems(Startup, spawn_ball.after(setup))
         .add_systems(Update, handle_actions)
         .add_systems(Update, handle_collisions)
+        .add_systems(Update, dev_tools_system)
         // resources
         // start
         .run();
@@ -235,4 +238,15 @@ fn handle_collisions(
             });
         }
     }
+}
+
+fn dev_tools_system(
+    commands: Commands,
+    mut contexts: EguiContexts,
+) {
+    egui::Window::new("Dev Tools").show(contexts.ctx_mut(), |ui| {
+        if ui.button("Spawn Ball").clicked() {
+            spawn_ball(commands);
+        }
+    });
 }
