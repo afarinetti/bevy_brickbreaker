@@ -17,12 +17,12 @@
   };
 
   packages = with pkgs; [
+    # tools
     git
     gitui
+    vscode
 
-    # unstable.jetbrains.jdk
-    # unstable.jetbrains.rust-rover
-
+    # libraries
     alsa-lib
     libudev-zero
 
