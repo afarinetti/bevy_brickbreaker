@@ -24,6 +24,7 @@ fn main() {
         // plugins
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
+                present_mode: bevy::window::PresentMode::Immediate,
                 resolution: WindowResolution::new(WINDOW_WIDTH, WINDOW_HEIGHT),
                 resizable: false,
                 enabled_buttons: EnabledButtons {

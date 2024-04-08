@@ -1,0 +1,15 @@
+allowUnfree: true
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/23.11
+  unstable:
+    url: github:NixOS/nixpkgs/nixpkgs-unstable
+  fenix:
+    url: github:nix-community/fenix
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+
+# If you have more than one devenv you can merge them
+#imports:
+# - ./backend
